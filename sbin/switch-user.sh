@@ -69,19 +69,10 @@ else
 fi
 
 #print the commands
-set -x
+#set -x
 if [ $USER != 'root' ]; then
-	#echo "runas /savecred /user:$runuser \"mintty -c '$@' \""
-	#runas /savecred /user:$runuser "mintty -c '$@' "
-	#echo "cygstart --action=runas" $(cygpath -w /usr/bin/mintty.exe) /savecred /user:$USER"
-	#cygstart -v --action=runas $(cygpath -w /usr/bin/mintty.exe) 
-	#cygstart -v --action=runas cmd.exe /c '"C:\\windows\\system32\\runas.exe"' "/savecred /user:$USER $(cygpath -w /usr/bin/mintty.exe)"
-	
-	#cygstart -v cmd.exe /k "\"\"%WINDIR%\\system32\\runas.exe\" /savecred /user:$USER \"$(cygpath -w /usr/bin/mintty.exe) -d $CURDIR\"\""
-
-	#cygstart -v cmd.exe /k '"%WINDIR%\\system32\\runas.exe"' "/savecred /profile /env /user:$USER \:$(cygpath -w /usr/bin/mintty.exe) -d $(cygpath -w .)\""
-	#cygstart -v cmd.exe /k "\"C:\\windows\\system32\\runas.exe\"" "/savecred /profile /env /user:$USER \"$(cygpath -w /usr/bin/mintty.exe)\""
-	cygstart -v --hide cmd.exe /c "\"\"%WINDIR%\\system32\\runas.exe\" /savecred /user:$USER \"$(cygpath -w /usr/bin/mintty.exe) $TTYCMD \"\""
+	#cygstart -v cmd.exe /c "\"\"%WINDIR%\\system32\\runas.exe\" /savecred /user:$USER \"$(cygpath -w /usr/bin/mintty.exe) $TTYCMD \"\""
+	cygstart --hide cmd.exe /c "\"\"%WINDIR%\\system32\\runas.exe\" /savecred /user:$USER \"$(cygpath -w /usr/bin/mintty.exe) $TTYCMD \"\""
 else
 	cygstart --action=runas "C:\\cygwin64\\bin\\mintty.exe" -h always -e $TTYCMD
 fi
