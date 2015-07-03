@@ -26,8 +26,8 @@ RETVAL=0
 prog="nginx"
 progdir="/usr/sbin"
 DAEMON="$progdir/$prog.exe"
-USER="www-service"
-GROUP="cygwin-www"
+USER="service-user"
+GROUP="service-group"
 DISPLAY="CYGWIN nginx"
 DESCRIPTION="nginx — HTTP and reverse proxy server, mail proxy server"
 

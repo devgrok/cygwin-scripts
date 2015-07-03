@@ -26,8 +26,8 @@ RETVAL=0
 prog="php-fpm"
 progdir="/usr/sbin"
 DAEMON="$progdir/$prog.exe"
-USER="www-service"
-GROUP="cygwin-www"
+USER="service-user"
+GROUP="service-group"
 DISPLAY="CYGWIN PHP FastCGI Process Manager"
 DESCRIPTION="php-fpm is the PHP FastCGI Process Manager"
 
