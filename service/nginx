@@ -1,0 +1,168 @@
+#! /bin/bash
+#
+# php-fpm   Start/Stop the PHP FastCGI Process Manager
+#
+# chkconfig: 2345 90 60
+# description:  nginx — HTTP and reverse proxy server, mail proxy server 
+# processname: nginx
+# config: /etc/nginx/nginx.conf
+# pidfile: /var/run/nginx.pid
+
+PATH=/sbin:/usr/sbin:/usr/bin
+PREFIX=/usr
+CONFIG=/etc/nginx/nginx.conf
+PIDFILE=/var/run/nginx.pid
+LOGFILE=/var/log/nginx.log
+
+# Source function library.
+if [ -f /etc/init.d/functions ] ; then
+  . /etc/init.d/functions
+fi
+
+RETVAL=0
+
+# See how we were called.
+
+prog="nginx"
+progdir="/usr/sbin"
+DAEMON="$progdir/$prog.exe"
+USER="www-service"
+GROUP="cygwin-www"
+DISPLAY="CYGWIN nginx"
+DESCRIPTION="nginx — HTTP and reverse proxy server, mail proxy server"
+
+test -f $DAEMON || exit 0
+
+# Source configuration
+if [ -f /etc/sysconfig/$prog ] ; then
+    . /etc/sysconfig/$prog
+fi
+
+start() {
+  echo -n $"Starting $prog: "
+	# check if cygrunsrv process
+  cygrunsrv --start $prog
+  RETVAL=$?
+  echo
+  [ $RETVAL -eq 0 ] && touch $PIDFILE  && echo "done."
+  return $RETVAL
+}
+
+stop() {
+	echo -n "Stopping $prog: "
+	PID=''
+  if [ -r $PIDFILE ]; then
+		PID=`cat $PIDFILE`
+	fi
+	cygrunsrv --stop $prog
+	RETVAL=$?
+  PIDS=$(pidof "$DAEMON")
+  if [ -n "$PIDS" ]; then
+  	echo -n " failed, killing processes $PIDS ... " && kill -9 $PIDS 2> /dev/null || echo -n " failed"
+	if [ -n $(pidof "$DAEMON") ]; then
+		echo "There are still processes running"
+		exit 100
+	fi
+  	#echo -n "\nAlso killing processes $PIDS"
+  	#kill -9 $(pidof "$prog")
+  elif [ -n $PID ]; then
+  	echo -n " stopped"
+  else
+  	echo -n " no PID file - SUCCESS"
+  fi
+	# this really needs a long time to stop.
+  #RETVAL=$?
+  echo "."
+  [ $RETVAL -eq 0 ] && rm -f $PIDFILE && echo "done."
+  return $RETVAL
+}
+
+rhstatus() {
+	# service status
+	cygrunsrv -Q $prog
+}
+
+restart() {
+  echo -n $"Restarting $prog: "
+  $0 stop
+  sleep 1
+  $0 start
+  echo "done."
+}
+
+install() {
+  echo -n $"Installing $prog daemon: "
+	# some safety measures
+	touch $LOGFILE $PIDFILE
+	chgrp "$GROUP" $LOGFILE $PIDFILE
+	chmod g+w $LOGFILE $PIDFILE
+	#
+	ARGS=""
+	#install it
+	cygrunsrv --install $prog --path $DAEMON -a "$ARGS" -e CYGWIN="$CYGWIN" --disp "$DISPLAY" --user "$USER" -t auto --preshutdown --termsig QUIT --dep cygserver
+	echo "Setting to start delayed-auto"
+	CMD="cmd.exe /b /k \"%windir%\system32\sc.exe config $prog start= delayed-auto\" "
+	echo cygstart $CMD
+	cygstart $CMD
+	echo "sc.exe called, return value $?"
+	if [ $USER = "LOCALSYSTEM" ]; then 
+		USER="SYSTEM"
+	fi
+	echo Making user: "$USER" owner of files
+	chown "$USER" $LOGFILE $PIDFILE
+	echo Creating /var/log/nginx
+	mkdir /var/log/nginx
+	chown "$USER":"$GROUP" /var/log/nginx
+  echo "done."
+}
+
+uninstall() {
+  echo -n $"Uninstalling $prog daemon: "
+	stop
+	cygrunsrv --remove $prog
+  echo "done."
+}
+
+reload() {
+  echo -n $"Reloading $prog daemon configuration: "
+	echo "unsupported. $0 restart"
+	return 1
+
+	/usr/bin/kill -HUP `cat $PIDFILE`
+  RETVAL=$?
+  [ $RETVAL -eq 0 ] && echo "done."
+  RETVAL=$?
+  return $RETVAL
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart)
+        restart
+        ;;
+  reload)
+        reload
+        ;;
+  install)
+        install
+        ;;
+  uninstall)
+        uninstall
+        ;;
+  status)
+        rhstatus
+        ;;
+  condrestart)
+        [ -f $PIDFILE ] && restart || :
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|install|uninstall|restart|condrestart}"
+        exit 1
+esac
+
+exit $?
